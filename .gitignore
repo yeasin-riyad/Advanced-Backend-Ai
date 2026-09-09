@@ -1,0 +1,7 @@
+# Ignores all .env files everywhere (root or inside any subfolder/microservice)
+.env
+.env.*
+!.env.example
+
+# Ignores all node_modules directories anywhere in the repository
+node_modules/
