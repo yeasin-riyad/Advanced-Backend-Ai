@@ -1,0 +1,8 @@
+services:
+   nginx:
+    image: nginx
+    ports:
+      - 8000:80  
+    # লোকাল মেশিনের কনফিগ ফাইলকে কন্টেইনারের কনফিগ ফাইলের সাথে বাইন্ড মাউন্ট করার জন্য
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
