@@ -1,12 +1,51 @@
 import express from "express"
 import dotenv from "dotenv"
+import { ChatGroq } from "@langchain/groq";
 
 dotenv.config()
 const app = express()
-const port = 5000
+const port = 6000
 app.use(express.json())
 
+const llm = new ChatGroq({
+  model: "openai/gpt-oss-120b", 
+  temperature: 0.7,             
+  maxRetries: 2,               
+})
 
+
+const upload = async () => {
+    const pdfPath = "./knowledge.pdf" // যে পিডিএফ ফাইলটি পড়তে হবে তার পাথ বা লোকেশন নির্ধারণ করা হলো
+    const buffer = fs.readFileSync(pdfPath) // ফাইলটি থেকে সমস্ত র-ডেটা (Raw Data) মেমোরিতে রিড করা হলো
+    const pdfResult = new PDFParse({ data: buffer }) // পিডিএফ পার্সার দিয়ে র-ডেটা প্রসেস করার জন্য অবজেক্ট তৈরি করা হলো
+    const result = await pdfResult.getText() // পিডিএফ-এর ভেতরের সব টেক্সট বা লেখা এক্সট্রাক্ট করা হলো
+    const text = result.text // এক্সট্রাক্ট করা মূল টেক্সটটুকু একটি ভ্যারিয়েবলে রাখা হলো
+    
+    // বিশাল টেক্সটকে ছোট ছোট অর্থপূর্ণ টুকরো বা চাঙ্কে (Chunk) ভাগ করার জন্য স্প্লিটার কনফিগার করা হচ্ছে
+    const spilitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 1000, // প্রতিটি টুকরো বা চাঙ্কের সর্বোচ্চ সাইজ হবে ১০০০ ক্যারেক্টার
+        chunkOverlap: 200 // কনটেক্সট ঠিক রাখতে আগের চাঙ্কের শেষ ২০০ ক্যারেক্টার পরের চাঙ্কের শুরুতে রিপিট হবে
+    })
+    
+    // উপরের নিয়ম অনুযায়ী মূল টেক্সট ফাইলটিকে টুকরো করে ল্যাংচেইন ডকুমেন্ট অবজেক্টের একটি অ্যারে তৈরি করা হচ্ছে
+    const docs = await spilitter.createDocuments([text])
+    
+    // await vectorStore.addDocuments(docs) // তৈরি হওয়া ডকুমেন্টগুলো ভেক্টর ডাটাবেজে সেভ করার লাইন (আপাতত কমেন্ট করা)
+}
+
+
+
+app.post("/ai", async (req, res) => {
+    const { input } = req.body; 
+        const response = await llm.invoke(input);
+
+    console.log(response); 
+    
+    // সফলভাবে উত্তরটি ফ্রন্টএন্ড বা ক্লায়েন্টের কাছে পাঠানো হচ্ছে
+    //  return res.status(200).json({ "ai:": response.messages }) 
+         return res.status(200).json({ "ai:": response.content}) 
+
+})
 app.get("/", (req, res) => {
     return res.json({ message: "hello from level4" })
 })
