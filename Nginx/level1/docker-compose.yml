@@ -1,35 +1,67 @@
 services:
-   nginx:
+  # Nginx সার্ভিস তৈরি করা হচ্ছে, যা Reverse Proxy ও Load Balancer হিসেবে কাজ করবে
+  nginx:
+    # Docker Hub থেকে Nginx-এর ইমেজ ব্যবহার করা হবে
     image: nginx
+
+    # লোকাল মেশিনের 8000 পোর্টকে কন্টেইনারের 80 পোর্টের সাথে যুক্ত করা হচ্ছে
     ports:
-      - 8000:80  
-    # লোকাল মেশিনের কনফিগ ফাইলকে কন্টেইনারের কনফিগ ফাইলের সাথে বাইন্ড মাউন্ট করার জন্য
+      - "8000:80"
+
+    # লোকাল মেশিনের Nginx কনফিগারেশন ফাইলকে কন্টেইনারের ফাইলের সাথে Bind Mount করা হচ্ছে
+    # ফলে লোকাল ফাইলে পরিবর্তন করলে কন্টেইনার সেই ফাইল ব্যবহার করতে পারবে
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-     
-   server1:
-    build: ./server
-    env_file:
-      - ./server/.env
-    environment:
-      - SERVER_NAME="1st server"
-    ports:
-      - 5001:7000  
 
-   server2:
+  # প্রথম Node.js সার্ভার
+  server1:
+    # ./server ফোল্ডারের Dockerfile ব্যবহার করে ইমেজ তৈরি করা হবে
     build: ./server
-    env_file:
-      - ./server/.env
-    environment:
-      - SERVER_NAME="2nd server"  
-    ports:
-      - 5002:7000    
 
-   server3:
-    build: ./server
+    # সার্ভারের জন্য Environment Variable লোড করা হবে
+    # এই ফাইলে DATABASE_URL, API_KEY ইত্যাদি থাকতে পারে
     env_file:
       - ./server/.env
+
+    # প্রথম সার্ভারের জন্য আলাদা নাম নির্ধারণ করা হচ্ছে
+    # Node.js অ্যাপ্লিকেশন থেকে process.env.SERVER_NAME দিয়ে এটি পাওয়া যাবে
     environment:
-      - SERVER_NAME="3rd server"
+      - SERVER_NAME=1st-server
+
+    # লোকাল মেশিনের 5001 পোর্টকে কন্টেইনারের 7000 পোর্টের সাথে যুক্ত করা হচ্ছে
     ports:
-      - 5003:7000    
+      - "5001:7000"
+
+  # দ্বিতীয় Node.js সার্ভার
+  server2:
+    # একই Dockerfile ব্যবহার করে দ্বিতীয় সার্ভারের ইমেজ তৈরি করা হবে
+    build: ./server
+
+    # Environment Variable লোড করা হবে
+    env_file:
+      - ./server/.env
+
+    # দ্বিতীয় সার্ভারের জন্য আলাদা নাম নির্ধারণ করা হচ্ছে
+    environment:
+      - SERVER_NAME=2nd-server
+
+    # লোকাল মেশিনের 5002 পোর্টকে কন্টেইনারের 7000 পোর্টের সাথে যুক্ত করা হচ্ছে
+    ports:
+      - "5002:7000"
+
+  # তৃতীয় Node.js সার্ভার
+  server3:
+    # একই Dockerfile ব্যবহার করে তৃতীয় সার্ভারের ইমেজ তৈরি করা হবে
+    build: ./server
+
+    # Environment Variable লোড করা হবে
+    env_file:
+      - ./server/.env
+
+    # তৃতীয় সার্ভারের জন্য আলাদা নাম নির্ধারণ করা হচ্ছে
+    environment:
+      - SERVER_NAME=3rd-server
+
+    # লোকাল মেশিনের 5003 পোর্টকে কন্টেইনারের 7000 পোর্টের সাথে যুক্ত করা হচ্ছে
+    ports:
+      - "5003:7000"
